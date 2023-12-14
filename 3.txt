@@ -1,0 +1,126 @@
+create database demo;
+use demo;
+-- Create Department table
+CREATE TABLE Department (
+    dept_name VARCHAR(255) PRIMARY KEY,
+    building VARCHAR(255),
+    budget DECIMAL(10, 2) NOT NULL
+);
+
+-- Create Course table
+CREATE TABLE Course (
+    course_id INT PRIMARY KEY,
+    title VARCHAR(255),
+    dept_name VARCHAR(255),
+    credits INT,
+    FOREIGN KEY (dept_name) REFERENCES Department(dept_name)
+);
+
+-- Create Instructor table
+CREATE TABLE Instructor (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),
+    dept_name VARCHAR(255),
+    salary DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (dept_name) REFERENCES Department(dept_name)
+);
+
+-- Create Section table
+CREATE TABLE Section (
+    course_id INT,
+    sec_id INT,
+    semester VARCHAR(255),
+    year INT,
+    building VARCHAR(255),
+    room_no INT,
+    time_slot_id INT,
+    PRIMARY KEY (course_id, sec_id, semester, year),
+    FOREIGN KEY (course_id) REFERENCES Course(course_id)
+);
+
+-- Create Teaches table
+CREATE TABLE Teaches (
+    id INT,
+    course_id INT,
+    sec_id INT,
+    semester VARCHAR(255),
+    year INT,
+    PRIMARY KEY (id, course_id, sec_id, semester, year),
+    FOREIGN KEY (id) REFERENCES Instructor(id),
+    FOREIGN KEY (course_id, sec_id, semester, year) REFERENCES Section(course_id, sec_id, semester, year)
+);
+
+-- Insert values into the tables
+INSERT INTO Department VALUES ('CSE', 'Computer Science Building', 100000.00);
+INSERT INTO Department VALUES ('ECE', 'Electrical Engineering Building', 80000.00);
+
+INSERT INTO Course VALUES (1, 'Introduction to Programming', 'CSE', 3);
+INSERT INTO Course VALUES (2, 'Database Management Systems', 'CSE', 4);
+
+INSERT INTO Instructor VALUES (101, 'John Doe', 'CSE', 75000.00);
+INSERT INTO Instructor VALUES (102, 'Jane Smith', 'ECE', 70000.00);
+
+INSERT INTO Section VALUES (1, 1, 'Fall', 2023, 'Computer Science Building', 101, 1);
+INSERT INTO Section VALUES (2, 1, 'Fall', 2023, 'Computer Science Building', 102, 2);
+
+INSERT INTO Teaches VALUES (101, 1, 1, 'Fall', 2023);
+INSERT INTO Teaches VALUES (102, 2, 1, 'Fall', 2023);
+
+-- 1
+SELECT title
+FROM Course
+WHERE dept_name = 'CSE' AND credits = 3;
+
+-- 2
+SELECT DISTINCT D.dept_name
+FROM Department D
+JOIN Course C ON D.dept_name = C.dept_name
+JOIN Section S ON C.course_id = S.course_id
+WHERE S.building = 'Computer Science Building';
+
+-- 3
+SELECT I.name
+FROM Instructor I
+JOIN Teaches T ON I.id = T.id
+JOIN Course C ON T.course_id = C.course_id
+WHERE C.credits = (SELECT MAX(credits) FROM Course);
+
+ -- 4
+ SELECT *
+FROM Instructor I
+LEFT JOIN Teaches T ON I.id = T.id;
+
+SELECT *
+FROM Instructor I
+RIGHT JOIN Teaches T ON I.id = T.id;
+
+-- 5
+CREATE VIEW InstructorCoursesView AS
+SELECT I.id, I.name AS instructor_name, I.dept_name AS instructor_dept,
+       T.course_id, T.sec_id, T.semester, T.year
+FROM Instructor I
+JOIN Teaches T ON I.id = T.id;
+
+SELECT *
+FROM InstructorCoursesView;
+
+-- 6
+SELECT *
+FROM Instructor
+WHERE salary = (SELECT MAX(salary) FROM Instructor);
+
+-- 7
+SELECT title
+FROM Course
+WHERE LOWER(title) LIKE '%computer%';
+
+-- 8
+SELECT dept_name
+FROM Course
+GROUP BY dept_name
+HAVING SUM(credits) > 25;
+
+-- 9
+SELECT *
+FROM Department
+ORDER BY budget DESC;
